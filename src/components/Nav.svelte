@@ -61,8 +61,7 @@
       </a>
     </li>
     <li>
-      <!-- for the blog link, we're using rel=prefetch so that Sapper prefetches
-		     the blog data when we hover over the link or tap it on a touchscreen -->
+      <!-- for the blog link, we're using rel=prefetch so that Sapper prefetches the blog data when we hover over the link or tap it on a touchscreen -->
       <a
         rel="prefetch"
         aria-current={segment === 'blog' ? 'page' : undefined}
@@ -73,6 +72,13 @@
     <li>
       <a aria-current={segment === 'todos' ? 'page' : undefined} href="todos">
         todos
+      </a>
+    </li>
+    <li>
+      <a
+        aria-current={segment === 'babylon-demo' ? 'page' : undefined}
+        href="babylon-demo">
+        BABYLON Demo
       </a>
     </li>
   </ul>

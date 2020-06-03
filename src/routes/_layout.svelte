@@ -5,7 +5,7 @@
 </script>
 
 <style>
-  main {
+  main.page {
     position: relative;
     max-width: 56em;
     background-color: white;
@@ -13,10 +13,21 @@
     margin: 0 auto;
     box-sizing: border-box;
   }
+
+  main.babylon {
+    width: 100%;
+    height: 100%;
+  }
 </style>
 
 <Nav {segment} />
 
-<main>
-  <slot />
-</main>
+{#if segment !== 'babylon-demo'}
+  <main class="page">
+    <slot />
+  </main>
+{:else}
+  <main class="babylon">
+    <slot />
+  </main>
+{/if}
