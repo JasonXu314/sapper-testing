@@ -4,12 +4,14 @@ import { Writable } from 'svelte/store';
 export default class Demo {
 	readonly scene: Scene;
 	readonly engine: Engine;
-	camera: Camera;
+	camera: Camera | null;
 	zoom: number;
 
 	constructor(canvas: HTMLCanvasElement, zoom: Writable<number>) {
 		this.engine = new Engine(canvas, true);
 		this.scene = new Scene(this.engine);
+		this.camera = null;
+		this.zoom = 1;
 		// this.scene.debugLayer.show();
 
 		// Experimentation with Svelte Stores

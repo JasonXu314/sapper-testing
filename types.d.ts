@@ -1,0 +1,3 @@
+interface EventWithTypes {
+	type: string;
+}
