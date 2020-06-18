@@ -58,7 +58,13 @@ export default class MySocket {
 	 */
 	onMsg<T extends EventWithTypes>(listener: (data: T) => void): () => void {
 		return this.on('message', (evt) => {
-			listener(JSON.parse(evt.data));
+			let data;
+			try {
+				data = JSON.parse(evt.data);
+			} catch (_) {
+				data = evt.data;
+			}
+			listener(data);
 		});
 	}
 

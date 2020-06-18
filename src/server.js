@@ -17,6 +17,13 @@ polka() // You can also use Express
 
 const wss = new ws.Server({ port: parseInt(PORT) + 2000 });
 wss.on('connection', (ws) => {
-	console.log('hi');
-	ws.send('hi');
+	ws.send(
+		JSON.stringify({
+			message: 'hi'
+		})
+	);
+
+	ws.on('message', (msg) => {
+		wss.clients.forEach((client) => client.send(JSON.stringify({ recieved: msg })));
+	});
 });

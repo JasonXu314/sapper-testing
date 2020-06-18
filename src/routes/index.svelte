@@ -1,15 +1,31 @@
 <script>
+  import MySocket from "../../util/MySocket";
+
   let connection;
+  let message = "";
+  let messages = [];
+
   function createConnection() {
-    connection = new WebSocket(`ws://localhost:5000`);
+    connection = new MySocket(`ws://localhost:5000`);
 
-    connection.addEventListener("connected", () => {
-      connection.send("hi");
+    connection.on("open", () => {
+      connection.json({
+        message: "hi"
+      });
     });
 
-    connection.addEventListener("message", msg => {
-      console.log(msg.data);
+    connection.onMsg(msg => {
+      if (msg.recieved) {
+        messages = [...messages, msg.recieved];
+      }
     });
+  }
+
+  function sendMsg(evt) {
+    if (connection && connection.isReady()) {
+      connection.send(message);
+      message = "";
+    }
   }
 </script>
 
@@ -66,3 +82,11 @@
   </strong>
 </p>
 <button on:click={createConnection}>Connect</button>
+
+<input type="text" bind:value={message} />
+<button on:click={sendMsg}>Send</button>
+<ul>
+  {#each messages as msg}
+    <li>{msg}</li>
+  {/each}
+</ul>
