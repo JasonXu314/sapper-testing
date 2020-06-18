@@ -63,6 +63,10 @@
       font-size: 4em;
     }
   }
+
+  ul {
+    list-style: none;
+  }
 </style>
 
 <svelte:head>
