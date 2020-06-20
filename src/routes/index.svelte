@@ -9,8 +9,7 @@
   async function createConnection() {
     const PORT = (await axios.get("/port")).data;
     connection = new MySocket(
-      `${location.protocol.replace("http", "ws")}//${location.hostname}:${PORT +
-        2000}`
+      `${location.protocol.replace("http", "ws")}//${location.hostname}:${PORT}`
     );
 
     connection.on("open", () => {
