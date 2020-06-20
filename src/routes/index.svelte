@@ -7,7 +7,9 @@
 
   function createConnection() {
     connection = new MySocket(
-      `${location.protocol.replace("http", "ws")}//${location.hostname}:5000`
+      `${location.protocol.replace("http", "ws")}//${
+        location.hostname
+      }/gateway:5000`
     );
 
     connection.on("open", () => {

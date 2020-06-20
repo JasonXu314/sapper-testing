@@ -16,7 +16,7 @@ polka() // You can also use Express
 	});
 
 // const wss = new ws.Server({ port: parseInt(PORT) + 2000 });
-const wss = new ws.Server({ port: 5000 });
+const wss = new ws.Server({ port: 5000, path: 'gateway' });
 wss.on('connection', (ws) => {
 	ws.send(
 		JSON.stringify({
@@ -29,4 +29,4 @@ wss.on('connection', (ws) => {
 	});
 });
 
-wss.on('listening', () => console.log('WebSocket server listening'));
+wss.on('listening', () => console.log('WebSocket server listening', wss.address()));
