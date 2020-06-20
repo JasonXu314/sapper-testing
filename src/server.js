@@ -8,14 +8,14 @@ import ws from 'ws';
 const { PORT, NODE_ENV } = process.env;
 const dev = NODE_ENV === 'development';
 
-polka() // You can also use Express
+const server = polka() // You can also use Express
 	.use(bodyParser.json())
 	.use(compression({ threshold: 0 }), sirv('static', { dev }), sapper.middleware())
 	.listen(PORT ? parseInt(PORT) : 3000, (err) => {
 		if (err) console.log('error', err);
 	});
 
-const wss = new ws.Server({ port: parseInt(PORT) + 2000 });
+const wss = new ws.Server({ port: parseInt(PORT) + 2000, server });
 wss.on('connection', (ws) => {
 	ws.send(
 		JSON.stringify({
@@ -28,4 +28,4 @@ wss.on('connection', (ws) => {
 	});
 });
 
-wss.on('listening', () => console.log('WebSocket server listening'));
+wss.on('listening', () => console.log('WebSocket server listening on port', parseInt(PORT) + 2000));
