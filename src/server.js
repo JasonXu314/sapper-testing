@@ -28,3 +28,5 @@ wss.on('connection', (ws) => {
 		wss.clients.forEach((client) => client.send(JSON.stringify({ recieved: msg })));
 	});
 });
+
+wss.on('listening', () => console.log('WebSocket server listening'));
