@@ -1,15 +1,16 @@
 <script>
   import MySocket from "../../util/MySocket";
+  import axios from "axios";
 
   let connection;
   let message = "";
   let messages = [];
 
-  function createConnection() {
+  async function createConnection() {
+    const PORT = (await axios.get("/port")).data;
     connection = new MySocket(
-      `${location.protocol.replace("http", "ws")}//${
-        location.hostname
-      }/gateway:5000`
+      `${location.protocol.replace("http", "ws")}//${location.hostname}:${PORT +
+        2000}`
     );
 
     connection.on("open", () => {
