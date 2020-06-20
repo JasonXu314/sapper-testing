@@ -6,7 +6,9 @@
   let messages = [];
 
   function createConnection() {
-    connection = new MySocket(`ws://localhost:5000`);
+    connection = new MySocket(
+      `${location.protocol.replace("http", "ws")}//${location.hostname}:5000`
+    );
 
     connection.on("open", () => {
       connection.json({
