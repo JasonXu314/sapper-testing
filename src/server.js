@@ -15,7 +15,8 @@ polka() // You can also use Express
 		if (err) console.log('error', err);
 	});
 
-const wss = new ws.Server({ port: parseInt(PORT) + 2000 });
+// const wss = new ws.Server({ port: parseInt(PORT) + 2000 });
+const wss = new ws.Server({ port: 5000 });
 wss.on('connection', (ws) => {
 	ws.send(
 		JSON.stringify({
