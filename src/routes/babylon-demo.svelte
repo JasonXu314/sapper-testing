@@ -29,23 +29,31 @@
         zoom.set(msg.zoom);
       } else if (msg.type === "INIT_ZOOM") {
         zoom.set(msg.zoom);
-        zoom.subscribe(zoom => {
-          connection.json({ type: "ZOOM", zoom });
-        });
       }
     });
   });
 
   function zoomIn() {
-    zoom.update(zoom => zoom + 0.1);
+    const newZoom = zoom + 0.1;
+    connection.json({ type: "ZOOM", zoom: newZoom });
+    return newZoom;
   }
 
   function zoomOut() {
-    zoom.update(zoom => zoom - 0.1);
+    zoom.update(zoom => {
+      const newZoom = zoom - 0.1;
+      connection.json({ type: "ZOOM", zoom: newZoom });
+
+      return newZoom;
+    });
   }
 
   function handleWheel(evt) {
-    zoom.update(zoom => zoom - evt.deltaY / 4000);
+    zoom.update(zoom => {
+      const newZoom = zoom - evt.deltaY / 4000;
+      connection.json({ type: "ZOOM", zoom: newZoom });
+      return newZoom;
+    });
   }
 </script>
 

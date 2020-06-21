@@ -30,16 +30,16 @@ wss.on('connection', (ws) => {
 	});
 
 	ws.on('message', (msg) => {
-		console.log(JSON.parse(msg).zoom, zoom);
 		if (JSON.parse(msg).type === 'ZOOM' && JSON.parse(msg).zoom !== zoom) {
 			zoom = JSON.parse(msg).zoom;
-			wss.clients.forEach((sock) => {
-				if (sock !== ws) {
-					sock.send(JSON.stringify({ type: 'ZOOM', zoom }));
-				}
-			});
 		}
 	});
 });
+
+setInterval(() => {
+	wss.clients.forEach((ws) => {
+		ws.send(JSON.stringify({ type: 'ZOOM', zoom }));
+	});
+}, 250);
 
 wss.on('listening', () => console.log('WebSocket server listening on port', PORT));
