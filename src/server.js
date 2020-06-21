@@ -16,15 +16,29 @@ const server = express()
 	});
 
 const wss = new ws.Server({ server });
+let zoom;
 wss.on('connection', (ws) => {
 	ws.send(
 		JSON.stringify({
-			message: 'hi'
+			type: 'INIT_ZOOM',
+			zoom
 		})
 	);
 
 	ws.on('message', (msg) => {
 		wss.clients.forEach((client) => client.send(JSON.stringify({ recieved: msg })));
+	});
+
+	ws.on('message', (msg) => {
+		console.log(JSON.parse(msg).zoom, zoom);
+		if (JSON.parse(msg).type === 'ZOOM' && JSON.parse(msg).zoom !== zoom) {
+			zoom = JSON.parse(msg).zoom;
+			wss.clients.forEach((sock) => {
+				if (sock !== ws) {
+					sock.send(JSON.stringify({ type: 'ZOOM', zoom }));
+				}
+			});
+		}
 	});
 });
 
