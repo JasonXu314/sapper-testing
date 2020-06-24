@@ -19,10 +19,10 @@
   let connection;
 
   onMount(async () => {
+    connection = new MySocket(location.origin.replace("http", "ws"));
     const demo = new Demo(canvas, zoom);
     demo.setup();
     demo.run();
-    connection = new MySocket(location.origin.replace("http", "ws"));
 
     connection.onMsg(msg => {
       if (msg.type === "ZOOM") {
@@ -32,29 +32,6 @@
       }
     });
   });
-
-  function zoomIn() {
-    const newZoom = zoom + 0.1;
-    connection.json({ type: "ZOOM", zoom: newZoom });
-    return newZoom;
-  }
-
-  function zoomOut() {
-    zoom.update(zoom => {
-      const newZoom = zoom - 0.1;
-      connection.json({ type: "ZOOM", zoom: newZoom });
-
-      return newZoom;
-    });
-  }
-
-  function handleWheel(evt) {
-    zoom.update(zoom => {
-      const newZoom = zoom - evt.deltaY / 4000;
-      connection.json({ type: "ZOOM", zoom: newZoom });
-      return newZoom;
-    });
-  }
 </script>
 
 <style>
@@ -64,7 +41,4 @@
   }
 </style>
 
-<canvas bind:this={canvas} on:wheel={handleWheel} />
-
-<button on:click={zoomIn}>Zoom In</button>
-<button on:click={zoomOut}>Zoom Out</button>
+<canvas bind:this={canvas} />

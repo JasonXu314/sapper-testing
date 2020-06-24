@@ -1,3 +1,5 @@
+import { EventWithTypes } from '../types';
+
 /**
  * Simple wrapper around the native WebSocket object for easier usability.
  */

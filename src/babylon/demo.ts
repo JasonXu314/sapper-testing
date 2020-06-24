@@ -1,17 +1,21 @@
-import { ArcRotateCamera, Camera, Engine, MeshBuilder, PointLight, Scene, Vector3 } from 'babylonjs';
+import { ArcRotateCamera, Camera, Engine, MeshBuilder, Observer, PointerInfo, PointLight, Scene, Vector3 } from 'babylonjs';
 import { Writable } from 'svelte/store';
+import MySocket from '../../util/MySocket';
 
 export default class Demo {
 	readonly scene: Scene;
 	readonly engine: Engine;
-	camera: Camera | null;
-	zoom: number;
+	socket: MySocket;
+	canvas: HTMLCanvasElement;
+	camera: Camera | null = null;
+	zoom: number = 1;
+	pointerObserver: Observer<PointerInfo> | null = null;
 
-	constructor(canvas: HTMLCanvasElement, zoom: Writable<number>) {
+	constructor(canvas: HTMLCanvasElement, zoom: Writable<number>, socket: MySocket) {
 		this.engine = new Engine(canvas, true);
 		this.scene = new Scene(this.engine);
-		this.camera = null;
-		this.zoom = 1;
+		this.socket = socket;
+		this.canvas = canvas;
 		// this.scene.debugLayer.show();
 
 		// Experimentation with Svelte Stores
@@ -41,7 +45,23 @@ export default class Demo {
 
 		let ground = MeshBuilder.CreateGround('ground', { width: 5, height: 5 });
 		ground.position.y -= 1;
-		let sphere = MeshBuilder.CreateSphere('Sphere', { diameter: 1 });
+		let sphere = MeshBuilder.CreateBox('Sphere', { depth: 1, height: 1, width: 1 });
+
+		this.scene.onPointerObservable.add((data) => {
+			if (data.type === BABYLON.PointerEventTypes.POINTERDOWN) {
+				if (data.pickInfo?.hit) {
+					this.pointerObserver = this.scene.onPointerObservable.add((data) => {
+						if (data.type === BABYLON.PointerEventTypes.POINTERMOVE) {
+							console.log(data);
+						}
+					});
+				}
+			} else if (data.type === BABYLON.PointerEventTypes.POINTERUP) {
+				if (this.pointerObserver && this.scene.onPointerObservable.observers.includes(this.pointerObserver)) {
+					this.scene.onPointerObservable.remove(this.pointerObserver);
+				}
+			}
+		});
 	}
 
 	run(): void {
