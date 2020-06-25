@@ -1,4 +1,14 @@
-import { EventWithTypes } from '../types';
+interface EventWithTypes {
+	type: string;
+}
+
+interface ExpectConfig {
+	once?: boolean;
+	timeout?: {
+		time: number;
+		callback: () => void;
+	};
+}
 
 /**
  * Simple wrapper around the native WebSocket object for easier usability.
@@ -91,21 +101,56 @@ export default class MySocket {
 	 * @param config.once if set to true, will remove the event listener after it triggers
 	 * @returns an unsubscriber function
 	 */
-	expect<T extends EventWithTypes>(type: T['type'], cb: (evt: T) => void, config?: { once: boolean }): () => void {
+	expect<T extends EventWithTypes>(type: T['type'], cb: (evt: T) => void, config?: ExpectConfig): () => void {
 		if (config && config.once) {
-			const unsubscribe = this.onMsg<T>((msg) => {
-				if (msg.type === type) {
-					cb(msg);
+			if (config.timeout) {
+				let timeoutId: number;
+				const unsubscribe = this.onMsg<T>((msg) => {
+					if (msg.type === type) {
+						cb(msg);
+						unsubscribe();
+						clearTimeout(timeoutId);
+					}
+				});
+
+				timeoutId = window.setTimeout(() => {
 					unsubscribe();
-				}
-			});
-			return unsubscribe;
+					config.timeout?.callback();
+				}, config.timeout.time * 1000);
+
+				return unsubscribe;
+			} else {
+				const unsubscribe = this.onMsg<T>((msg) => {
+					if (msg.type === type) {
+						cb(msg);
+						unsubscribe();
+					}
+				});
+				return unsubscribe;
+			}
 		} else {
-			return this.onMsg<T>((msg) => {
-				if (msg.type === type) {
-					cb(msg);
-				}
-			});
+			if (config?.timeout) {
+				let timeoutId: number;
+				const unsubscribe = this.onMsg<T>((msg) => {
+					if (msg.type === type) {
+						cb(msg);
+						clearTimeout(timeoutId);
+					}
+				});
+
+				timeoutId = window.setTimeout(() => {
+					unsubscribe();
+					config.timeout?.callback();
+				}, config.timeout.time * 1000);
+
+				return unsubscribe;
+			} else {
+				return this.onMsg<T>((msg) => {
+					if (msg.type === type) {
+						cb(msg);
+					}
+				});
+			}
 		}
 	}
 

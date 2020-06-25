@@ -10,27 +10,40 @@
 </script>
 
 <script>
-  import { onMount } from "svelte/internal";
+  import { onMount } from "svelte";
   import Demo from "../babylon/demo";
   import { zoom } from "../stores/zoom";
   import MySocket from "../../util/MySocket";
+  import axios from "axios";
+  import papa from "papaparse";
 
   let canvas;
   let connection;
+  let msg = "";
 
   onMount(async () => {
-    connection = new MySocket(location.origin.replace("http", "ws"));
-    const demo = new Demo(canvas, zoom);
-    demo.setup();
-    demo.run();
+    try {
+      const rawCSV = (await axios.get(
+        "https://raw.githubusercontent.com/debugpoint136/chromosome-3d/master/IMR90_chr07-0-159Mb.csv"
+      )).data
+        .split("\n")
+        .slice(1, 5)
+        .join("\n");
+      const rawObj = papa.parse(rawCSV, { header: true });
 
-    connection.onMsg(msg => {
-      if (msg.type === "ZOOM") {
-        zoom.set(msg.zoom);
-      } else if (msg.type === "INIT_ZOOM") {
-        zoom.set(msg.zoom);
-      }
-    });
+      const data = rawObj.data.map(item => ({
+        chromosome: item["Chromosome index"],
+        segment: item["Segment index"],
+        x: item.X,
+        y: item.Y,
+        z: item.Z
+      }));
+
+      const demo = new Demo(canvas, zoom, data);
+    } catch (error) {
+      console.log(error);
+      msg = `Error: ${error}`;
+    }
   });
 </script>
 
@@ -42,3 +55,4 @@
 </style>
 
 <canvas bind:this={canvas} />
+<div>{msg}</div>

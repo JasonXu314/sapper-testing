@@ -21,7 +21,6 @@ const server = express()
 const babylon = new BABYLON.Scene(new BABYLON.NullEngine());
 const ground = MeshBuilder.CreateGround('ground', { width: 5, height: 5 });
 ground.position.y -= 1;
-const sphere = MeshBuilder.CreateSphere('Sphere', { diameter: 1 });
 
 const wss = new ws.Server({ server });
 let boxPos = {
@@ -29,21 +28,21 @@ let boxPos = {
 	y: 0,
 	z: 0
 };
+let zoom = 1;
 wss.on('connection', (ws) => {
 	ws.send(
 		JSON.stringify({
-			type: 'INIT_POS',
-			rotate: boxPos
+			zoom,
+			type: 'INIT',
+			position: boxPos
 		})
 	);
 
-	// ws.on('message', (msg) => {
-	// 	wss.clients.forEach((client) => client.send(JSON.stringify({ recieved: msg })));
-	// });
-
 	ws.on('message', (msg) => {
-		if (JSON.parse(msg).type === 'POS' && diffPos(JSON.parse(msg).zoom, zoom)) {
+		if (JSON.parse(msg).type === 'POS' && diffPos(JSON.parse(msg).position, boxPos)) {
 			boxPos = JSON.parse(msg).position;
+		} else if (JSON.parse(msg).type === 'ZOOM' && JSON.parse(msg).zoom !== zoom) {
+			zoom = JSON.parse(msg).zoom;
 		}
 	});
 });
@@ -51,7 +50,8 @@ wss.on('connection', (ws) => {
 setInterval(() => {
 	wss.clients.forEach((ws) => {
 		ws.send(JSON.stringify({ type: 'POS', position: boxPos }));
+		ws.send(JSON.stringify({ type: 'ZOOM', zoom }));
 	});
-}, 250);
+}, 25);
 
 wss.on('listening', () => console.log('WebSocket server listening on port', PORT));
