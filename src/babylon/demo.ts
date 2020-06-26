@@ -1,4 +1,4 @@
-import { ArcRotateCamera, Camera, Curve3, Engine, Matrix, MeshBuilder, Observer, Plane, PointerInfo, PointLight, Scene, Vector3 } from 'babylonjs';
+import { ArcRotateCamera, Camera, Curve3, Engine, Matrix, Mesh, MeshBuilder, Observer, Plane, PointerInfo, PointLight, Scene, Vector3 } from 'babylonjs';
 import { Writable } from 'svelte/store';
 import { InitMsg, Position, PositionMsg, ZoomMsg } from '../../types';
 import MySocket from '../../util/MySocket';
@@ -19,8 +19,10 @@ export default class Demo {
 	camera: Camera | null = null;
 	zoom: number = 1;
 	zoomObservable: Writable<number>;
+	zoomUnsubscriber: () => void;
 	pointerObserver: Observer<PointerInfo> | null = null;
 	chromosomeData: ChromosomeData[];
+	chromosome: Mesh | null = null;
 
 	constructor(canvas: HTMLCanvasElement, zoom: Writable<number>, data: ChromosomeData[]) {
 		this.engine = new Engine(canvas, true);
@@ -32,18 +34,8 @@ export default class Demo {
 		// this.scene.debugLayer.show();
 
 		// Experimentation with Svelte Stores
-		zoom.subscribe((val) => {
-			if (!this.zoom) {
-				this.zoom = val;
-			} else {
-				if (val > this.zoom) {
-					this.zoomIn(val);
-					this.zoom = val;
-				} else {
-					this.zoomOut(val);
-					this.zoom = val;
-				}
-			}
+		this.zoomUnsubscriber = zoom.subscribe((val) => {
+			this.setZoom(val);
 		});
 
 		this.socket.expect<ZoomMsg>('ZOOM', (msg) => {
@@ -54,6 +46,7 @@ export default class Demo {
 			'INIT',
 			(evt) => {
 				zoom.set(evt.zoom);
+				this.setZoom(evt.zoom);
 				this.setup(evt.position);
 			},
 			{
@@ -62,6 +55,8 @@ export default class Demo {
 					time: 2.5,
 					callback: () => {
 						this.setup({ x: 0, y: 0, z: 0 });
+						zoom.set(1);
+						this.setZoom(1);
 					}
 				}
 			}
@@ -77,19 +72,37 @@ export default class Demo {
 		const light = new PointLight('light', new Vector3(0, 10, 0), this.scene);
 		this.scene.addLight(light);
 
-		// let ground = MeshBuilder.CreateGround('ground', { width: 5, height: 5 });
-		// ground.position.y -= 1;
-		// let sphere = MeshBuilder.CreateBox('Sphere', { depth: 1, height: 1, width: 1 });
 		const pointArray = normalize(this.chromosomeData).map(({ x, y, z }) => new Vector3(x, y, z));
+		const spline = Curve3.CreateCatmullRomSpline(pointArray, this.chromosomeData.length);
 		const chromosome = MeshBuilder.CreateTube(
 			'chromosome',
 			{
-				path: Curve3.CreateCatmullRomSpline(pointArray, this.chromosomeData.length).getPoints(),
+				path: spline.getPoints(),
 				radius: 1
 			},
 			this.scene
 		);
 		chromosome.position.set(initPos.x, initPos.y, initPos.z);
+		this.chromosome = chromosome;
+
+		// const axisX = MeshBuilder.CreateLines(
+		// 	'axisX',
+		// 	{ points: [Vector3.Zero(), new Vector3(5, 0, 0), new Vector3(5 * 0.95, 0.05 * 5, 0), new Vector3(5, 0, 0), new Vector3(5 * 0.95, -0.05 * 5, 0)] },
+		// 	this.scene
+		// );
+		// axisX.color = new BABYLON.Color3(1, 0, 0);
+		// var axisY = MeshBuilder.CreateLines(
+		// 	'axisY',
+		// 	{ points: [Vector3.Zero(), new Vector3(0, 5, 0), new Vector3(-0.05 * 5, 5 * 0.95, 0), new Vector3(0, 5, 0), new Vector3(0.05 * 5, 5 * 0.95, 0)] },
+		// 	this.scene
+		// );
+		// axisY.color = new BABYLON.Color3(0, 1, 0);
+		// var axisZ = MeshBuilder.CreateLines(
+		// 	'axisZ',
+		// 	{ points: [Vector3.Zero(), new Vector3(0, 0, 5), new Vector3(0, -0.05 * 5, 5 * 0.95), new Vector3(0, 0, 5), new Vector3(0, 0.05 * 5, 5 * 0.95)] },
+		// 	this.scene
+		// );
+		// axisZ.color = new BABYLON.Color3(0, 0, 1);
 
 		this.scene.onPointerObservable.add((data) => {
 			if (data.type === BABYLON.PointerEventTypes.POINTERDOWN) {
@@ -98,7 +111,7 @@ export default class Demo {
 					const normal = data.pickInfo.getNormal();
 					const tangentPlane = Plane.FromPositionAndNormal(pickedPoint, normal!);
 					const { x: initX, y: initY, z: initZ } = pickedPoint;
-					const { x: chrInitX, y: chrInitY, z: chrInitZ } = chromosome.position;
+					const { x: chrInitX, y: chrInitY, z: chrInitZ } = this.chromosome!.position;
 
 					this.pointerObserver = this.scene.onPointerObservable.add((data) => {
 						if (data.type === BABYLON.PointerEventTypes.POINTERMOVE) {
@@ -109,7 +122,7 @@ export default class Demo {
 								pickingRay.origin.add(pickingRay.direction.normalize().scale(tangentPlane.signedDistanceTo(pickingRay.origin)));
 							const deltaY = y - initY;
 							const deltaZ = z - initZ;
-							chromosome.position = new Vector3(0, chrInitY + deltaY, chrInitZ + deltaZ);
+							this.chromosome!.position = new Vector3(0, chrInitY + deltaY, chrInitZ + deltaZ);
 							this.socket.json<PositionMsg>({
 								type: 'POS',
 								position: { x: 0, y: chrInitY + deltaY, z: chrInitZ + deltaZ }
@@ -124,19 +137,36 @@ export default class Demo {
 				}
 			} else if (data.type === BABYLON.PointerEventTypes.POINTERWHEEL) {
 				this.zoomObservable.update((prevZoom) => {
-					const newZoom = prevZoom + ((data.event as WheelEvent).deltaY * -1) / 500;
+					const newZoom = prevZoom + ((data.event as WheelEvent).deltaY * -1) / 50;
 					this.socket.json<ZoomMsg>({
 						type: 'ZOOM',
 						zoom: newZoom
 					});
 					return newZoom;
 				});
+			} else if (data.type === BABYLON.PointerEventTypes.POINTERDOUBLETAP) {
+				if (data.pickInfo?.hit) {
+					const splinePoints = spline.getPoints();
+					const pickedPoint = data.pickInfo.pickedPoint!.add(this.camera!.globalPosition).subtract(this.chromosome!.position);
+
+					let minDist = Vector3.Distance(splinePoints[0], pickedPoint),
+						idx = 0;
+					splinePoints.forEach((pt, i) => {
+						const len = Vector3.Distance(pt, pickedPoint);
+
+						if (len < minDist) {
+							minDist = len;
+							idx = i;
+						}
+					});
+					console.log(idx, minDist);
+				}
 			}
 		});
 
 		this.socket.expect<PositionMsg>('POS', (evt) => {
 			const { x, y, z } = evt.position;
-			chromosome.position = new Vector3(x, y, z);
+			this.chromosome!.position = new Vector3(x, y, z);
 		});
 		this.run();
 	}
@@ -145,16 +175,25 @@ export default class Demo {
 		this.engine.runRenderLoop(() => this.scene.render());
 	}
 
-	// Experimentation with Svelte Stores
-	zoomIn(zoom: number): void {
+	setZoom(zoom: number): void {
 		if (this.camera) {
-			this.camera.position = this.camera.position.add(this.camera.getForwardRay(zoom).direction);
+			this.camera.position = new Vector3(10, 0, 0).add(this.camera.getForwardRay(zoom).direction.normalize().scale(zoom));
 		}
 	}
 
-	zoomOut(zoom: number): void {
-		if (this.camera) {
-			this.camera.position = this.camera.position.subtract(this.camera.getForwardRay(zoom).direction);
-		}
+	updateData(newData: ChromosomeData[]): void {
+		const pointArray = normalize(newData).map(({ x, y, z }) => new Vector3(x, y, z));
+		const { x, y, z } = this.chromosome!.position;
+		this.chromosome?.dispose();
+		const chromosome = MeshBuilder.CreateTube(
+			'chromosome',
+			{
+				path: Curve3.CreateCatmullRomSpline(pointArray, this.chromosomeData.length).getPoints(),
+				radius: 1
+			},
+			this.scene
+		);
+		chromosome.position.set(x, y, z);
+		this.chromosome = chromosome;
 	}
 }

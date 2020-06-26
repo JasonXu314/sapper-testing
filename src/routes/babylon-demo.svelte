@@ -12,14 +12,18 @@
 <script>
   import { onMount } from "svelte";
   import Demo from "../babylon/demo";
+  import { view } from "../stores/view";
   import { zoom } from "../stores/zoom";
   import MySocket from "../../util/MySocket";
   import axios from "axios";
   import papa from "papaparse";
+  import ViewSelector from "../components/ViewSelector.svelte";
 
   let canvas;
   let connection;
   let msg = "";
+  let data;
+  let demo;
 
   onMount(async () => {
     try {
@@ -27,11 +31,11 @@
         "https://raw.githubusercontent.com/debugpoint136/chromosome-3d/master/IMR90_chr07-0-159Mb.csv"
       )).data
         .split("\n")
-        .slice(1, 5)
+        .slice(1)
         .join("\n");
       const rawObj = papa.parse(rawCSV, { header: true });
 
-      const data = rawObj.data.map(item => ({
+      data = rawObj.data.map(item => ({
         chromosome: item["Chromosome index"],
         segment: item["Segment index"],
         x: item.X,
@@ -39,10 +43,16 @@
         z: item.Z
       }));
 
-      const demo = new Demo(canvas, zoom, data);
+      demo = new Demo(canvas, zoom, data.slice(0, 5));
     } catch (error) {
       console.log(error);
       msg = `Error: ${error}`;
+    }
+  });
+
+  view.subscribe(([begin, end]) => {
+    if (demo) {
+      demo.updateData(data.slice(begin, end));
     }
   });
 </script>
@@ -56,3 +66,6 @@
 
 <canvas bind:this={canvas} />
 <div>{msg}</div>
+{#if data}
+  <ViewSelector />
+{/if}
