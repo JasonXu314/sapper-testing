@@ -85,6 +85,7 @@ export default class Demo {
 		chromosome.position.set(initPos.x, initPos.y, initPos.z);
 		this.chromosome = chromosome;
 
+		// Coordinate Axes
 		// const axisX = MeshBuilder.CreateLines(
 		// 	'axisX',
 		// 	{ points: [Vector3.Zero(), new Vector3(5, 0, 0), new Vector3(5 * 0.95, 0.05 * 5, 0), new Vector3(5, 0, 0), new Vector3(5 * 0.95, -0.05 * 5, 0)] },
