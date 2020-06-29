@@ -25,15 +25,18 @@ const wss = new ws.Server({ server });
 let cameraView = {
 	alpha: 0,
 	beta: Math.PI * 2,
-	radius: 10
+	radius: 10,
+	targetPos: {
+		x: 0,
+		y: 0,
+		z: 0
+	}
 };
 wss.on('connection', (ws) => {
 	ws.send(
 		JSON.stringify({
 			type: 'INIT',
-			alpha: cameraView.alpha,
-			beta: cameraView.beta,
-			radius: cameraView.radius
+			cameraView
 		})
 	);
 

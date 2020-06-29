@@ -34,15 +34,15 @@ export default class Demo {
 
 		this.socket.expect<InitMsg>(
 			'INIT',
-			({ alpha, beta, radius }) => {
-				this.setup({ alpha, beta, radius });
+			({ cameraView }) => {
+				this.setup(cameraView);
 			},
 			{
 				once: true,
 				timeout: {
 					time: 2.5,
 					callback: () => {
-						this.setup({ alpha: 0, beta: 2 * Math.PI, radius: 10 });
+						this.setup({ alpha: 0, beta: 2 * Math.PI, radius: 10, targetPos: { x: 0, y: 0, z: 0 } });
 					}
 				}
 			}
@@ -92,16 +92,40 @@ export default class Demo {
 
 		camera.onViewMatrixChangedObservable.add((cam) => {
 			const camera = cam as ArcRotateCamera;
-			this.socket.json<CameraViewMsg>({ type: 'CAMERA_VIEW', cameraView: { alpha: camera.alpha, beta: camera.beta, radius: camera.radius } });
+			const { x, y, z } = camera.target;
+			this.socket.json<CameraViewMsg>({
+				type: 'CAMERA_VIEW',
+				cameraView: {
+					alpha: camera.alpha,
+					beta: camera.beta,
+					radius: camera.radius,
+					targetPos: {
+						x,
+						y,
+						z
+					}
+				}
+			});
 		});
 
-		this.socket.expect<CameraViewMsg>('CAMERA_VIEW', ({ cameraView: { alpha, beta, radius } }) => {
-			if (this.camera) {
-				this.camera.alpha = alpha;
-				this.camera.beta = beta;
-				this.camera.radius = radius;
+		this.socket.expect<CameraViewMsg>(
+			'CAMERA_VIEW',
+			({
+				cameraView: {
+					alpha,
+					beta,
+					radius,
+					targetPos: { x, y, z }
+				}
+			}) => {
+				if (this.camera) {
+					this.camera.alpha = alpha;
+					this.camera.beta = beta;
+					this.camera.radius = radius;
+					this.camera.target = new Vector3(x, y, z);
+				}
 			}
-		});
+		);
 
 		this.run();
 	}

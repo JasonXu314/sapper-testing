@@ -6,9 +6,7 @@ export interface Position {
 
 export interface InitMsg {
 	type: 'INIT';
-	alpha: number;
-	beta: number;
-	radius: number;
+	cameraView: CameraDetail;
 }
 
 export interface CameraViewMsg {
@@ -20,4 +18,5 @@ export interface CameraDetail {
 	alpha: number;
 	beta: number;
 	radius: number;
+	targetPos: Position;
 }
