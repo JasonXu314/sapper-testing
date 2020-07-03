@@ -4,18 +4,19 @@ export interface Position {
 	z: number;
 }
 
-export interface PositionMsg {
-	type: 'POS';
-	position: Position;
-}
-
-export interface ZoomMsg {
-	type: 'ZOOM';
-	zoom: number;
-}
-
 export interface InitMsg {
 	type: 'INIT';
-	zoom: number;
-	position: Position;
+	cameraView: CameraDetail;
+}
+
+export interface CameraViewMsg {
+	type: 'CAMERA_VIEW';
+	cameraView: CameraDetail;
+}
+
+export interface CameraDetail {
+	alpha: number;
+	beta: number;
+	radius: number;
+	targetPos: Position;
 }
