@@ -18,6 +18,7 @@
   import axios from "axios";
   import papa from "papaparse";
   import ViewSelector from "../components/ViewSelector.svelte";
+  import fps from "fps-indicator";
 
   let canvas;
   let connection;
@@ -26,6 +27,8 @@
   let demo;
 
   onMount(async () => {
+    const fpsMeter = fps({ period: 250, position: "bottom-right", max: 100 });
+
     try {
       const rawCSV = (await axios.get(
         "https://raw.githubusercontent.com/debugpoint136/chromosome-3d/master/IMR90_chr07-0-159Mb.csv"

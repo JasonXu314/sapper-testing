@@ -22,6 +22,7 @@ export default class Demo {
 	pointerObserver: Observer<PointerInfo> | null = null;
 	chromosomeData: ChromosomeData[];
 	chromosome: Mesh | null = null;
+	// octree: Octree<AbstractMesh> | null;
 
 	constructor(canvas: HTMLCanvasElement, zoom: Writable<number>, data: ChromosomeData[]) {
 		this.engine = new Engine(canvas, true);
@@ -30,6 +31,7 @@ export default class Demo {
 		this.canvas = canvas;
 		this.chromosomeData = data;
 		this.zoomObservable = zoom;
+		// this.octree = null;
 		// this.scene.debugLayer.show();
 
 		this.socket.expect<InitMsg>(
@@ -69,6 +71,9 @@ export default class Demo {
 			this.scene
 		);
 		this.chromosome = chromosome;
+
+		// this.octree = this.scene.createOrUpdateSelectionOctree();
+		// this.octree.dynamicContent.push(chromosome);
 
 		// Coordinate Axes
 		// const axisX = MeshBuilder.CreateLines(
@@ -131,7 +136,10 @@ export default class Demo {
 	}
 
 	run(): void {
-		this.engine.runRenderLoop(() => this.scene.render());
+		this.engine.runRenderLoop(() => {
+			this.scene.render();
+			// this.octree = this.scene.createOrUpdateSelectionOctree();
+		});
 	}
 
 	updateData(newData: ChromosomeData[]): void {
