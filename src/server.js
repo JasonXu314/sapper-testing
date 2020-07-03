@@ -8,6 +8,9 @@ import sirv from 'sirv';
 import ws from 'ws';
 import Entity from '../util/Entity.ts';
 
+// Load env variables
+require('dotenv').config();
+
 const { PORT, NODE_ENV } = process.env;
 const dev = NODE_ENV === 'development';
 
