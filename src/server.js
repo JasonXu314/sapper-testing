@@ -7,6 +7,9 @@ import express from 'express';
 import sirv from 'sirv';
 import ws from 'ws';
 
+// Set up Env
+require('dotenv').config();
+
 const { PORT, NODE_ENV } = process.env;
 const dev = NODE_ENV === 'development';
 

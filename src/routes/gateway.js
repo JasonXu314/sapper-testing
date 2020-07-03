@@ -1,11 +1,11 @@
 import Pusher from 'pusher';
 
-const appId = '1030328';
-const key = 'e255c7f7b3a1fd276637';
-const secret = 'a2b16e5e82b67b60435e';
-const cluster = 'us2';
-
 export const post = (req, res) => {
+	const appId = process.env.PUSHER_ID;
+	const key = process.env.PUSHER_KEY;
+	const secret = process.env.PUSHER_SECRET;
+	const cluster = 'us2';
+
 	const pusher = new Pusher({
 		appId,
 		key,
