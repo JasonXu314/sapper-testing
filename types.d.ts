@@ -20,3 +20,9 @@ export interface CameraDetail {
 	radius: number;
 	targetPos: Position;
 }
+
+export interface SerializedEntity {
+	position: Position;
+	rotation: Position;
+	id: number;
+}

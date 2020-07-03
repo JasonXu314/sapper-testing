@@ -6,6 +6,7 @@ import compression from 'compression';
 import express from 'express';
 import sirv from 'sirv';
 import ws from 'ws';
+import Entity from '../util/Entity.ts';
 
 const { PORT, NODE_ENV } = process.env;
 const dev = NODE_ENV === 'development';
@@ -17,9 +18,11 @@ const server = express()
 		if (err) console.log('error', err);
 	});
 
-const babylon = new BABYLON.Scene(new BABYLON.NullEngine());
-const ground = MeshBuilder.CreateGround('ground', { width: 5, height: 5 });
+const scene = new BABYLON.Scene(new BABYLON.NullEngine());
+const ground = MeshBuilder.CreateGround('ground', { width: 5, height: 5 }, scene);
 ground.position.y -= 1;
+
+const entities = [new Entity(ground)];
 
 const wss = new ws.Server({ server });
 let cameraView = {
