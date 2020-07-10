@@ -1,17 +1,13 @@
 <script context="module">
-  // import SSR from "../babylon/ssr";
-
-  // export async function preload(page, session) {
-  //   const demo = new SSR();
-  //   demo.setup();
-
-  //   return { demo };
-  // }
+  export async function preload(page, session) {
+    return {};
+  }
 </script>
 
 <script>
   import { onMount } from "svelte";
   import Demo from "../babylon/demo";
+  import GLTF from "../babylon/gltf";
   import { view } from "../stores/view";
   import { zoom } from "../stores/zoom";
   import MySocket from "../../util/MySocket";
@@ -47,6 +43,8 @@
       }));
 
       demo = new Demo(canvas, zoom, data.slice(0, 5));
+      // demo = new GLTF(canvas);
+      // demo.setup();
     } catch (error) {
       console.log(error);
       msg = `Error: ${error}`;
@@ -58,6 +56,12 @@
       demo.updateData(data.slice(begin, end));
     }
   });
+
+  function expt() {
+    if (demo) {
+      demo.export();
+    }
+  }
 </script>
 
 <style>
@@ -72,3 +76,4 @@
 {#if data}
   <ViewSelector />
 {/if}
+<button on:click={expt}>Export</button>

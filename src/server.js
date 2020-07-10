@@ -4,6 +4,7 @@ import { MeshBuilder } from 'babylonjs';
 import bodyParser from 'body-parser';
 import compression from 'compression';
 import express from 'express';
+import { writeFileSync } from 'fs';
 import sirv from 'sirv';
 import ws from 'ws';
 import Entity from '../util/Entity.ts';
@@ -27,6 +28,10 @@ ground.position.y -= 1;
 
 const entities = [new Entity(ground)];
 
+// GLTF2Export.GLTFAsync(scene, 'scene').then((data) => {
+// 	fs.writeFileSync('./scene.gltf', data.glTFFiles['scene.gltf']);
+// });
+
 const wss = new ws.Server({ server });
 let cameraView = {
 	alpha: 0,
@@ -49,6 +54,11 @@ wss.on('connection', (ws) => {
 	ws.on('message', (msg) => {
 		if (JSON.parse(msg).type === 'CAMERA_VIEW') {
 			cameraView = JSON.parse(msg).cameraView;
+		} else if (JSON.parse(msg).type === 'GLTF_EXPORT') {
+			const data = JSON.parse(msg).data;
+			const bin = JSON.parse(msg).bin;
+			writeFileSync('./scene.gltf', data);
+			writeFileSync('./scene.bin', bin);
 		}
 	});
 });

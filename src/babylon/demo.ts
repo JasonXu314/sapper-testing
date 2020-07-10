@@ -1,4 +1,5 @@
 import { ArcRotateCamera, Curve3, Engine, Mesh, MeshBuilder, Observer, PointerInfo, Scene, Vector3 } from 'babylonjs';
+import { GLTF2Export } from 'babylonjs-serializers';
 import { Writable } from 'svelte/store';
 import { CameraDetail, CameraViewMsg, InitMsg } from '../../types';
 import MySocket from '../../util/MySocket';
@@ -156,5 +157,14 @@ export default class Demo {
 		);
 		chromosome.position.set(x, y, z);
 		this.chromosome = chromosome;
+	}
+
+	export(): void {
+		GLTF2Export.GLTFAsync(this.scene, 'scene').then((data) => {
+			console.log(data);
+			(data.glTFFiles['scene.bin'] as Blob).text().then((bin) => {
+				this.socket.json({ type: 'GLTF_EXPORT', data: data.glTFFiles['scene.gltf'], bin });
+			});
+		});
 	}
 }
