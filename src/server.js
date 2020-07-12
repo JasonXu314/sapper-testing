@@ -5,6 +5,7 @@ import bodyParser from 'body-parser';
 import compression from 'compression';
 import express from 'express';
 import { writeFileSync } from 'fs';
+import { join } from 'path';
 import sirv from 'sirv';
 import ws from 'ws';
 import Entity from '../util/Entity.ts';
@@ -57,8 +58,13 @@ wss.on('connection', (ws) => {
 		} else if (JSON.parse(msg).type === 'GLTF_EXPORT') {
 			const data = JSON.parse(msg).data;
 			const bin = JSON.parse(msg).bin;
-			writeFileSync('./scene.gltf', data);
-			writeFileSync('./scene.bin', bin);
+
+			writeFileSync(join('.', 'gltf', 'scene.gltf'), data);
+			writeFileSync(join('.', 'gltf', 'scene.bin'), bin);
+		} else if (JSON.parse(msg).type === 'GLB_EXPORT') {
+			const glb = JSON.parse(msg).glb;
+
+			writeFileSync(join('.', 'gltf', 'scene.glb'), glb);
 		}
 	});
 });

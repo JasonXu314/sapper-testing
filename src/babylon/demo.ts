@@ -151,7 +151,7 @@ export default class Demo {
 			'chromosome',
 			{
 				path: Curve3.CreateCatmullRomSpline(pointArray, this.chromosomeData.length).getPoints(),
-				radius: 1
+				radius: 0.1
 			},
 			this.scene
 		);
@@ -159,12 +159,33 @@ export default class Demo {
 		this.chromosome = chromosome;
 	}
 
-	export(): void {
-		GLTF2Export.GLTFAsync(this.scene, 'scene').then((data) => {
-			console.log(data);
-			(data.glTFFiles['scene.bin'] as Blob).text().then((bin) => {
-				this.socket.json({ type: 'GLTF_EXPORT', data: data.glTFFiles['scene.gltf'], bin });
-			});
-		});
+	async export(): Promise<any> {
+		// GLTF2Export.GLBAsync(this.scene, 'scene').then((data) => {
+		// 	console.log(data);
+		// 	(data.glTFFiles['scene.glb'] as Blob).arrayBuffer().then((glb) => {
+		// 		this.socket.json({ type: 'GLB_EXPORT', glb: encode(glb) });
+		// 	});
+		// });
+		const data = await GLTF2Export.GLTFAsync(this.scene, 'scene');
+		console.log(data);
+		const bin = await (data.glTFFiles['scene.bin'] as Blob).arrayBuffer();
+		this.socket.json({ type: 'GLTF_EXPORT', data: data.glTFFiles['scene.gltf'], bin: encode(bin) });
+
+		return { data: data.glTFFiles['scene.gltf'], bin: encode(bin) };
 	}
+
+	destroy(): void {
+		this.engine.stopRenderLoop();
+		this.scene.dispose();
+	}
+}
+
+function encode(buffer: ArrayBuffer): string {
+	let binary = '';
+	const bytes = new Uint8Array(buffer);
+	const len = bytes.byteLength;
+	for (var i = 0; i < len; i++) {
+		binary += String.fromCharCode(bytes[i]);
+	}
+	return btoa(binary);
 }

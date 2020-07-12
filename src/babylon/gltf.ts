@@ -26,7 +26,7 @@ export default class GLTF {
 		// this.scene.debugLayer.show();
 	}
 
-	setup(): void {
+	setup(gltf: string, bin: string): void {
 		// Coordinate Axes
 		// const axisX = MeshBuilder.CreateLines(
 		// 	'axisX',
@@ -46,8 +46,10 @@ export default class GLTF {
 		// 	this.scene
 		// );
 		// axisZ.color = new BABYLON.Color3(0, 0, 1);
+		this.scene.createDefaultCameraOrLight(true, true, true);
 
-		SceneLoader.Append('', 'data:' + gltfString, this.scene);
+		SceneLoader.Append('', 'data:' + gltf.replace('scene.bin', `data:application/octet-stream;base64,${bin}`), this.scene);
+		// SceneLoader.Append('', 'data:base64,' + glb, this.scene);
 
 		this.run();
 	}
@@ -58,134 +60,3 @@ export default class GLTF {
 		});
 	}
 }
-
-const gltfString = `{
-	"asset": {
-	  "generator": "BabylonJS",
-	  "version": "2.0"
-	},
-	"buffers": [
-	  {
-		"byteLength": 152,
-		"uri": "./scene.bin"
-	  }
-	],
-	"nodes": [
-	  {
-		"name": "ground",
-		"translation": [
-		  0,
-		  -1,
-		  0
-		],
-		"mesh": 0,
-		"rotation": [
-		  0,
-		  1,
-		  0,
-		  0
-		]
-	  }
-	],
-	"meshes": [
-	  {
-		"primitives": [
-		  {
-			"attributes": {
-			  "POSITION": 0,
-			  "NORMAL": 1
-			},
-			"indices": 2,
-			"material": 0
-		  }
-		]
-	  }
-	],
-	"scenes": [
-	  {
-		"nodes": [
-		  0
-		]
-	  }
-	],
-	"scene": 0,
-	"bufferViews": [
-	  {
-		"buffer": 0,
-		"byteLength": 48,
-		"name": "position - ground",
-		"byteStride": 12
-	  },
-	  {
-		"buffer": 0,
-		"byteLength": 48,
-		"byteOffset": 48,
-		"name": "normal - ground",
-		"byteStride": 12
-	  },
-	  {
-		"buffer": 0,
-		"byteLength": 32,
-		"byteOffset": 96,
-		"name": "uv - ground",
-		"byteStride": 8
-	  },
-	  {
-		"buffer": 0,
-		"byteLength": 24,
-		"byteOffset": 128,
-		"name": "Indices - ground"
-	  }
-	],
-	"accessors": [
-	  {
-		"name": "position - ground",
-		"bufferView": 0,
-		"componentType": 5126,
-		"count": 4,
-		"type": "VEC3",
-		"min": [
-		  -2.5,
-		  0,
-		  -2.5
-		],
-		"max": [
-		  2.5,
-		  0,
-		  2.5
-		],
-		"byteOffset": 0
-	  },
-	  {
-		"name": "normal - ground",
-		"bufferView": 1,
-		"componentType": 5126,
-		"count": 4,
-		"type": "VEC3",
-		"byteOffset": 0
-	  },
-	  {
-		"name": "indices - ground",
-		"bufferView": 3,
-		"componentType": 5125,
-		"count": 6,
-		"type": "SCALAR",
-		"byteOffset": 0
-	  }
-	],
-	"materials": [
-	  {
-		"name": "default material",
-		"pbrMetallicRoughness": {
-		  "baseColorFactor": [
-			0.5,
-			0.5,
-			0.5,
-			1
-		  ],
-		  "metallicFactor": 0,
-		  "roughnessFactor": 0.3288090062081349
-		}
-	  }
-	]
-  }`;
