@@ -95,4 +95,4 @@
 {/if}
 <button on:click={expt}>Export</button>
 <button on:click={def}>Default</button>
-<button on:click={load}>Load from GLB</button>
+<button on:click={load}>Load from Serialized</button>
