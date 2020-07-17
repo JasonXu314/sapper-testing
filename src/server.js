@@ -5,7 +5,7 @@ import bodyParser from 'body-parser';
 import compression from 'compression';
 import express from 'express';
 import { writeFileSync } from 'fs';
-import { join } from 'path';
+import { resolve } from 'path';
 import sirv from 'sirv';
 import ws from 'ws';
 import Entity from '../util/Entity.ts';
@@ -53,19 +53,22 @@ wss.on('connection', (ws) => {
 	);
 
 	ws.on('message', (msg) => {
-		if (JSON.parse(msg).type === 'CAMERA_VIEW') {
-			cameraView = JSON.parse(msg).cameraView;
-		} else if (JSON.parse(msg).type === 'GLTF_EXPORT') {
-			const data = JSON.parse(msg).data;
-			const bin = JSON.parse(msg).bin;
+		try {
+			const parsedMsg = JSON.parse(msg);
+			if (parsedMsg.type === 'CAMERA_VIEW') {
+				cameraView = parsedMsg.cameraView;
+			} else if (parsedMsg.type === 'GLTF_EXPORT') {
+				const data = parsedMsg.data;
+				const bin = parsedMsg.bin;
 
-			writeFileSync(join('.', 'gltf', 'scene.gltf'), data);
-			writeFileSync(join('.', 'gltf', 'scene.bin'), bin);
-		} else if (JSON.parse(msg).type === 'GLB_EXPORT') {
-			const glb = JSON.parse(msg).glb;
+				writeFileSync(resolve('.', 'static', 'gltf', 'scene.gltf'), data);
+				writeFileSync(resolve('.', 'static', 'gltf', 'scene.bin'), Uint8Array.from(bin));
+			} else if (parsedMsg.type === 'GLB_EXPORT') {
+				const glb = parsedMsg.glb;
 
-			writeFileSync(join('.', 'gltf', 'scene.glb'), glb);
-		}
+				writeFileSync(resolve('.', 'static', 'gltf', 'scene.glb'), glb);
+			}
+		} catch (err) {}
 	});
 });
 

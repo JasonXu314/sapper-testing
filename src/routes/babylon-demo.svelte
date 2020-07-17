@@ -28,12 +28,13 @@
 
   function expt() {
     if (demo) {
-      demo.export().then(data => {
-        demo.destroy();
+      demo.export();
+      // .then(data => {
+      //   demo.destroy();
 
-        demo = new GLTF(canvas);
-        demo.setup(data.data, data.bin);
-      });
+      //   demo = new GLTF(canvas);
+      //   demo.setup(data.data, data.bin);
+      // });
     }
   }
 
@@ -63,21 +64,8 @@
   }
 
   async function load() {
-    // const glb = (await axios.get("http://localhost:3000/glb")).data.glb;
-    const data = (await axios.get("http://localhost:3000/gltf")).data;
-
     demo = new GLTF(canvas);
-    demo.setup(data.gltf, data.bin);
-  }
-
-  function encode(buffer) {
-    let binary = "";
-    const bytes = new Uint8Array(buffer);
-    const len = bytes.byteLength;
-    for (var i = 0; i < len; i++) {
-      binary += String.fromCharCode(bytes[i]);
-    }
-    return btoa(binary);
+    demo.setup();
   }
 </script>
 

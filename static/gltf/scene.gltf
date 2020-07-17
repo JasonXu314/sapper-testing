@@ -5,7 +5,7 @@
   },
   "buffers": [
     {
-      "byteLength": 74400,
+      "byteLength": 164800,
       "uri": "scene.bin"
     }
   ],
@@ -56,28 +56,28 @@
   "bufferViews": [
     {
       "buffer": 0,
-      "byteLength": 16380,
+      "byteLength": 35880,
       "name": "position - chromosome",
       "byteStride": 12
     },
     {
       "buffer": 0,
-      "byteLength": 16380,
-      "byteOffset": 16380,
+      "byteLength": 35880,
+      "byteOffset": 35880,
       "name": "normal - chromosome",
       "byteStride": 12
     },
     {
       "buffer": 0,
-      "byteLength": 10920,
-      "byteOffset": 32760,
+      "byteLength": 23920,
+      "byteOffset": 71760,
       "name": "uv - chromosome",
       "byteStride": 8
     },
     {
       "buffer": 0,
-      "byteLength": 30720,
-      "byteOffset": 43680,
+      "byteLength": 69120,
+      "byteOffset": 95680,
       "name": "Indices - chromosome"
     }
   ],
@@ -86,17 +86,17 @@
       "name": "position - chromosome",
       "bufferView": 0,
       "componentType": 5126,
-      "count": 1365,
+      "count": 2990,
       "type": "VEC3",
       "min": [
-        -662.681640625,
-        -0.2156444638967514,
-        -0.9890603423118591
+        -845.92041015625,
+        -2455.57470703125,
+        -0.0989060327410698
       ],
       "max": [
-        0.9861544370651245,
-        949.703857421875,
-        372.4518737792969
+        3474.784423828125,
+        1031.275390625,
+        683.12841796875
       ],
       "byteOffset": 0
     },
@@ -104,7 +104,7 @@
       "name": "normal - chromosome",
       "bufferView": 1,
       "componentType": 5126,
-      "count": 1365,
+      "count": 2990,
       "type": "VEC3",
       "byteOffset": 0
     },
@@ -112,7 +112,7 @@
       "name": "indices - chromosome",
       "bufferView": 3,
       "componentType": 5125,
-      "count": 7680,
+      "count": 17280,
       "type": "SCALAR",
       "byteOffset": 0
     }

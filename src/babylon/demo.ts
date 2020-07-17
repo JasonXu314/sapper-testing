@@ -160,18 +160,21 @@ export default class Demo {
 	}
 
 	async export(): Promise<any> {
-		// GLTF2Export.GLBAsync(this.scene, 'scene').then((data) => {
-		// 	console.log(data);
-		// 	(data.glTFFiles['scene.glb'] as Blob).arrayBuffer().then((glb) => {
-		// 		this.socket.json({ type: 'GLB_EXPORT', glb: encode(glb) });
-		// 	});
-		// });
 		const data = await GLTF2Export.GLTFAsync(this.scene, 'scene');
 		console.log(data);
 		const bin = await (data.glTFFiles['scene.bin'] as Blob).arrayBuffer();
-		this.socket.json({ type: 'GLTF_EXPORT', data: data.glTFFiles['scene.gltf'], bin: encode(bin) });
+		this.socket.json({ type: 'GLTF_EXPORT', data: data.glTFFiles['scene.gltf'], bin: Array.from(new Uint8Array(bin)) });
 
 		return { data: data.glTFFiles['scene.gltf'], bin: encode(bin) };
+	}
+
+	async exportGlb(): Promise<any> {
+		const data = await GLTF2Export.GLBAsync(this.scene, 'scene').then((data) => {
+			console.log(data);
+			(data.glTFFiles['scene.glb'] as Blob).arrayBuffer().then((glb) => {
+				this.socket.json({ type: 'GLB_EXPORT', glb: encode(glb) });
+			});
+		});
 	}
 
 	destroy(): void {
