@@ -36,10 +36,14 @@ export default class GLTF {
 		this.scene.createDefaultCameraOrLight(true, true, true);
 		SceneLoader.RegisterPlugin(new GLTFFileLoader());
 
-		SceneLoader.AppendAsync('http://localhost:3000/gltf/', 'scene.gltf', this.scene).then(() => {
+		SceneLoader.AppendAsync('https://gemini-backnd.herokuapp.com/gltf/', 'scene.gltf', this.scene).then(() => {
 			this.scene.createDefaultCameraOrLight(true, true, true);
 			this.run();
 		});
+		// SceneLoader.AppendAsync('http://localhost:5000/gltf/', 'scene.gltf', this.scene).then(() => {
+		// 	this.scene.createDefaultCameraOrLight(true, true, true);
+		// 	this.run();
+		// });
 	}
 
 	run(): void {

@@ -8,7 +8,6 @@ import { writeFileSync } from 'fs';
 import { resolve } from 'path';
 import sirv from 'sirv';
 import ws from 'ws';
-import Entity from '../util/Entity.ts';
 
 // Load env variables
 require('dotenv').config();
@@ -16,22 +15,26 @@ require('dotenv').config();
 const { PORT, NODE_ENV } = process.env;
 const dev = NODE_ENV === 'development';
 
-const server = express()
-	.use(bodyParser.json())
-	.use(compression({ threshold: 0 }), sirv('static', { dev }), sapper.middleware())
-	.listen(PORT ? parseInt(PORT) : 3000, (err) => {
-		if (err) console.log('error', err);
-	});
+let bin = null,
+	gltf = null;
 
+const app = express()
+	.use(bodyParser.json())
+	.get('/gltf/:file', (req, res) => {
+		if (req.params.file === 'scene.bin') {
+			res.status(200).header('Content-Type', 'application/octet-stream').send(Uint8Array.from(bin).buffer);
+		} else {
+			res.status(200).send(gltf);
+		}
+	})
+	.use(compression({ threshold: 0 }), sirv('static', { dev }), sapper.middleware());
 const scene = new BABYLON.Scene(new BABYLON.NullEngine());
 const ground = MeshBuilder.CreateGround('ground', { width: 5, height: 5 }, scene);
 ground.position.y -= 1;
 
-const entities = [new Entity(ground)];
-
-// GLTF2Export.GLTFAsync(scene, 'scene').then((data) => {
-// 	fs.writeFileSync('./scene.gltf', data.glTFFiles['scene.gltf']);
-// });
+const server = app.listen(PORT ? parseInt(PORT) : 3000, (err) => {
+	if (err) console.log('error', err);
+});
 
 const wss = new ws.Server({ server });
 let cameraView = {
@@ -59,10 +62,12 @@ wss.on('connection', (ws) => {
 				cameraView = parsedMsg.cameraView;
 			} else if (parsedMsg.type === 'GLTF_EXPORT') {
 				const data = parsedMsg.data;
-				const bin = parsedMsg.bin;
+				const binary = parsedMsg.bin;
 
+				gltf = data;
+				bin = JSON.stringify(binary);
 				writeFileSync(resolve('.', 'static', 'gltf', 'scene.gltf'), data);
-				writeFileSync(resolve('.', 'static', 'gltf', 'scene.bin'), Uint8Array.from(bin));
+				writeFileSync(resolve('.', 'static', 'gltf', 'scene.bin'), Uint8Array.from(binary));
 			} else if (parsedMsg.type === 'GLB_EXPORT') {
 				const glb = parsedMsg.glb;
 

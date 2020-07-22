@@ -1,8 +1,8 @@
 import { ArcRotateCamera, Curve3, Engine, Mesh, MeshBuilder, Observer, PointerInfo, Scene, Vector3 } from 'babylonjs';
 import { GLTF2Export } from 'babylonjs-serializers';
+import io from 'socket.io-client';
 import { Writable } from 'svelte/store';
-import { CameraDetail, CameraViewMsg, InitMsg } from '../../types';
-import MySocket from '../../util/MySocket';
+import { CameraDetail } from '../../types';
 import { normalize } from '../../util/utils';
 
 interface ChromosomeData {
@@ -15,7 +15,7 @@ interface ChromosomeData {
 export default class Demo {
 	readonly scene: Scene;
 	readonly engine: Engine;
-	socket: MySocket;
+	socket: SocketIOClient.Socket;
 	canvas: HTMLCanvasElement;
 	camera: ArcRotateCamera | null = null;
 	zoom: number = 1;
@@ -28,28 +28,30 @@ export default class Demo {
 	constructor(canvas: HTMLCanvasElement, zoom: Writable<number>, data: ChromosomeData[]) {
 		this.engine = new Engine(canvas, true);
 		this.scene = new Scene(this.engine);
-		this.socket = new MySocket(location.origin.replace('http', 'ws'));
+		// this.socket = io(location.origin.replace('3000', '5000').replace('http', 'ws'));
+		this.socket = io('https://gemini-backnd.herokuapp.com');
 		this.canvas = canvas;
 		this.chromosomeData = data;
 		this.zoomObservable = zoom;
 		// this.octree = null;
 		// this.scene.debugLayer.show();
 
-		this.socket.expect<InitMsg>(
-			'INIT',
-			({ cameraView }) => {
-				this.setup(cameraView);
-			},
-			{
-				once: true,
-				timeout: {
-					time: 2.5,
-					callback: () => {
-						this.setup({ alpha: 0, beta: 2 * Math.PI, radius: 10, targetPos: { x: 0, y: 0, z: 0 } });
-					}
-				}
-			}
-		);
+		// this.socket.expect<InitMsg>(
+		// 	'INIT',
+		// 	({ cameraView }) => {
+		// 		this.setup(cameraView);
+		// 	},
+		// 	{
+		// 		once: true,
+		// 		timeout: {
+		// 			time: 2.5,
+		// 			callback: () => {
+		// 				this.setup({ alpha: 0, beta: 2 * Math.PI, radius: 10, targetPos: { x: 0, y: 0, z: 0 } });
+		// 			}
+		// 		}
+		// 	}
+		// );
+		this.setup({ alpha: 0, beta: 2 * Math.PI, radius: 10, targetPos: { x: 0, y: 0, z: 0 } });
 	}
 
 	setup({ alpha, beta, radius }: CameraDetail): void {
@@ -99,39 +101,39 @@ export default class Demo {
 		camera.onViewMatrixChangedObservable.add((cam) => {
 			const camera = cam as ArcRotateCamera;
 			const { x, y, z } = camera.target;
-			this.socket.json<CameraViewMsg>({
-				type: 'CAMERA_VIEW',
-				cameraView: {
-					alpha: camera.alpha,
-					beta: camera.beta,
-					radius: camera.radius,
-					targetPos: {
-						x,
-						y,
-						z
-					}
-				}
-			});
+			// this.socket.json<CameraViewMsg>({
+			// 	type: 'CAMERA_VIEW',
+			// 	cameraView: {
+			// 		alpha: camera.alpha,
+			// 		beta: camera.beta,
+			// 		radius: camera.radius,
+			// 		targetPos: {
+			// 			x,
+			// 			y,
+			// 			z
+			// 		}
+			// 	}
+			// });
 		});
 
-		this.socket.expect<CameraViewMsg>(
-			'CAMERA_VIEW',
-			({
-				cameraView: {
-					alpha,
-					beta,
-					radius,
-					targetPos: { x, y, z }
-				}
-			}) => {
-				if (this.camera) {
-					this.camera.alpha = alpha;
-					this.camera.beta = beta;
-					this.camera.radius = radius;
-					this.camera.target = new Vector3(x, y, z);
-				}
-			}
-		);
+		// this.socket.expect<CameraViewMsg>(
+		// 	'CAMERA_VIEW',
+		// 	({
+		// 		cameraView: {
+		// 			alpha,
+		// 			beta,
+		// 			radius,
+		// 			targetPos: { x, y, z }
+		// 		}
+		// 	}) => {
+		// 		if (this.camera) {
+		// 			this.camera.alpha = alpha;
+		// 			this.camera.beta = beta;
+		// 			this.camera.radius = radius;
+		// 			this.camera.target = new Vector3(x, y, z);
+		// 		}
+		// 	}
+		// );
 
 		this.run();
 	}
@@ -163,7 +165,8 @@ export default class Demo {
 		const data = await GLTF2Export.GLTFAsync(this.scene, 'scene');
 		console.log(data);
 		const bin = await (data.glTFFiles['scene.bin'] as Blob).arrayBuffer();
-		this.socket.json({ type: 'GLTF_EXPORT', data: data.glTFFiles['scene.gltf'], bin: Array.from(new Uint8Array(bin)) });
+		// this.socket.json({ type: 'GLTF_EXPORT', data: data.glTFFiles['scene.gltf'], bin: Array.from(new Uint8Array(bin)) });
+		this.socket.emit('GLTF_EXPORT', { data: data.glTFFiles['scene.gltf'], bin: Array.from(new Uint8Array(bin)) });
 
 		return { data: data.glTFFiles['scene.gltf'], bin: encode(bin) };
 	}
@@ -172,7 +175,7 @@ export default class Demo {
 		const data = await GLTF2Export.GLBAsync(this.scene, 'scene').then((data) => {
 			console.log(data);
 			(data.glTFFiles['scene.glb'] as Blob).arrayBuffer().then((glb) => {
-				this.socket.json({ type: 'GLB_EXPORT', glb: encode(glb) });
+				// this.socket.json({ type: 'GLB_EXPORT', glb: encode(glb) });
 			});
 		});
 	}

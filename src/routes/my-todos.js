@@ -17,5 +17,5 @@ export const del = (req, res) => {
 		todos.findIndex((todo) => todo.id === parseInt(req.body.id)),
 		1
 	);
-	res.writeHead(200).end('Todo Delted');
+	res.writeHead(200).end('Todo Deleted');
 };
