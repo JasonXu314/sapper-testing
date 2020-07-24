@@ -2,6 +2,7 @@ import { ArcRotateCamera, Curve3, Engine, Mesh, MeshBuilder, Observer, PointerIn
 import { GLTF2Export } from 'babylonjs-serializers';
 import io from 'socket.io-client';
 import { Writable } from 'svelte/store';
+import { BoxGeometry, Mesh as ThreeMesh, MeshBasicMaterial, PerspectiveCamera, Scene as ThreeScene, WebGLRenderer } from 'three';
 import { CameraDetail } from '../../types';
 import { normalize } from '../../util/utils';
 
@@ -15,43 +16,59 @@ interface ChromosomeData {
 export default class Demo {
 	readonly scene: Scene;
 	readonly engine: Engine;
+	readonly threeScene: ThreeScene;
+	readonly renderer: WebGLRenderer;
 	socket: SocketIOClient.Socket;
 	canvas: HTMLCanvasElement;
 	camera: ArcRotateCamera | null = null;
+	threeCamera: PerspectiveCamera;
 	zoom: number = 1;
 	zoomObservable: Writable<number>;
 	pointerObserver: Observer<PointerInfo> | null = null;
 	chromosomeData: ChromosomeData[];
 	chromosome: Mesh | null = null;
-	// octree: Octree<AbstractMesh> | null;
+	threeMesh: ThreeMesh;
+	box: Mesh;
 
 	constructor(canvas: HTMLCanvasElement, zoom: Writable<number>, data: ChromosomeData[]) {
-		this.engine = new Engine(canvas, true);
-		this.scene = new Scene(this.engine);
-		// this.socket = io(location.origin.replace('3000', '5000').replace('http', 'ws'));
 		this.socket = io('https://gemini-backnd.herokuapp.com');
 		this.canvas = canvas;
 		this.chromosomeData = data;
 		this.zoomObservable = zoom;
-		// this.octree = null;
+
+		// Setting up ThreeJS
+		this.threeScene = new ThreeScene();
+		this.threeCamera = new PerspectiveCamera(75, window.innerWidth / window.innerHeight, 1, 1000); // 75, window.innerWidth / window.innerHeight, 1, 1000
+		this.threeCamera.position.z = 500;
+		const geometry = new BoxGeometry(200, 200, 200);
+		const material = new MeshBasicMaterial({ color: 0xff0000 });
+
+		const mesh = new ThreeMesh(geometry, material);
+		this.threeScene.add(mesh);
+		this.threeMesh = mesh;
+
+		const renderer = new WebGLRenderer({ canvas });
+		renderer.autoClear = false;
+		renderer.setSize(window.innerWidth, window.innerHeight);
+		this.renderer = renderer;
+
+		// Setting up BabylonJS
+		const engine = new Engine(renderer.getContext(), true);
+		this.engine = engine;
+		this.scene = new Scene(this.engine);
+		this.scene.beforeRender = function () {
+			(engine as any)._currentProgram = null;
+			engine.wipeCaches(true);
+		};
+
+		const box = MeshBuilder.CreateBox('box', { size: 3 }, this.scene);
+		this.box = box;
+
 		// this.scene.debugLayer.show();
 
-		// this.socket.expect<InitMsg>(
-		// 	'INIT',
-		// 	({ cameraView }) => {
-		// 		this.setup(cameraView);
-		// 	},
-		// 	{
-		// 		once: true,
-		// 		timeout: {
-		// 			time: 2.5,
-		// 			callback: () => {
-		// 				this.setup({ alpha: 0, beta: 2 * Math.PI, radius: 10, targetPos: { x: 0, y: 0, z: 0 } });
-		// 			}
-		// 		}
-		// 	}
-		// );
-		this.setup({ alpha: 0, beta: 2 * Math.PI, radius: 10, targetPos: { x: 0, y: 0, z: 0 } });
+		// this.setup({ alpha: 0, beta: 2 * Math.PI, radius: 10, targetPos: { x: 0, y: 0, z: 0 } });
+		this.scene.createDefaultCameraOrLight(true, true, true);
+		this.animate();
 	}
 
 	setup({ alpha, beta, radius }: CameraDetail): void {
@@ -75,9 +92,6 @@ export default class Demo {
 		);
 		this.chromosome = chromosome;
 
-		// this.octree = this.scene.createOrUpdateSelectionOctree();
-		// this.octree.dynamicContent.push(chromosome);
-
 		// Coordinate Axes
 		// const axisX = MeshBuilder.CreateLines(
 		// 	'axisX',
@@ -98,50 +112,18 @@ export default class Demo {
 		// );
 		// axisZ.color = new BABYLON.Color3(0, 0, 1);
 
-		camera.onViewMatrixChangedObservable.add((cam) => {
-			const camera = cam as ArcRotateCamera;
-			const { x, y, z } = camera.target;
-			// this.socket.json<CameraViewMsg>({
-			// 	type: 'CAMERA_VIEW',
-			// 	cameraView: {
-			// 		alpha: camera.alpha,
-			// 		beta: camera.beta,
-			// 		radius: camera.radius,
-			// 		targetPos: {
-			// 			x,
-			// 			y,
-			// 			z
-			// 		}
-			// 	}
-			// });
-		});
+		// camera.onViewMatrixChangedObservable.add((cam) => {
+		// 	const camera = cam as ArcRotateCamera;
+		// 	const { x, y, z } = camera.target;
+		// });
 
-		// this.socket.expect<CameraViewMsg>(
-		// 	'CAMERA_VIEW',
-		// 	({
-		// 		cameraView: {
-		// 			alpha,
-		// 			beta,
-		// 			radius,
-		// 			targetPos: { x, y, z }
-		// 		}
-		// 	}) => {
-		// 		if (this.camera) {
-		// 			this.camera.alpha = alpha;
-		// 			this.camera.beta = beta;
-		// 			this.camera.radius = radius;
-		// 			this.camera.target = new Vector3(x, y, z);
-		// 		}
-		// 	}
-		// );
-
-		this.run();
+		// this.run();
+		this.animate();
 	}
 
 	run(): void {
 		this.engine.runRenderLoop(() => {
 			this.scene.render();
-			// this.octree = this.scene.createOrUpdateSelectionOctree();
 		});
 	}
 
@@ -184,6 +166,20 @@ export default class Demo {
 		this.engine.stopRenderLoop();
 		this.scene.dispose();
 	}
+
+	animate(): void {
+		requestAnimationFrame(this.animate.bind(this));
+
+		restoreThreeWebGLState(this.renderer);
+		this.threeMesh.rotation.x += 0.01;
+		this.threeMesh.rotation.y += 0.02;
+
+		console.log(this.threeCamera);
+		this.renderer.render(this.threeScene, this.threeCamera);
+		// this.box.rotation.x += 0.005;
+		// this.box.rotation.y += 0.01;
+		// this.scene.render();
+	}
 }
 
 function encode(buffer: ArrayBuffer): string {
@@ -194,4 +190,18 @@ function encode(buffer: ArrayBuffer): string {
 		binary += String.fromCharCode(bytes[i]);
 	}
 	return btoa(binary);
+}
+
+function restoreThreeWebGLState(renderer: WebGLRenderer) {
+	const gl = renderer.getContext();
+
+	gl.bindVertexArray(null);
+	gl.enable(gl.DEPTH_TEST);
+	gl.depthFunc(gl.LEQUAL);
+	gl.enable(gl.CULL_FACE);
+	gl.cullFace(gl.BACK);
+	gl.clearDepth(1);
+	gl.clear(gl.DEPTH_BUFFER_BIT);
+
+	renderer.state.reset();
 }
